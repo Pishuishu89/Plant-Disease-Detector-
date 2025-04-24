@@ -6,23 +6,24 @@ import tensorflow as tf
 import streamlit as st
 import gdown
 
-# ==== Step 1: Download model from Google Drive if not already downloaded ====
-file_id = st.secrets["MODEL_FILE_ID"]  # put this in .streamlit/secrets.toml
+# === Model file ID from Google Drive ===
+file_id = "1eHlFtHhK1oRtYZ_SUIJMosLZCGRQYiur"
 url = f"https://drive.google.com/uc?id={file_id}"
 model_path = "plant_disease_prediction_model.h5"
 
+# === Download the model if it doesn't exist ===
 if not os.path.exists(model_path):
     st.write("📥 Downloading model from Google Drive...")
     gdown.download(url, model_path, quiet=False)
 
-# ==== Step 2: Load the pre-trained model ====
+# === Load the model ===
 model = tf.keras.models.load_model(model_path)
 
-# ==== Step 3: Load class indices ====
+# === Load class labels ===
 with open("class_indices.json") as f:
     class_indices = json.load(f)
 
-# ==== Step 4: Helper - Preprocess image ====
+# === Preprocess uploaded image ===
 def load_and_preprocess_image(image_path, target_size=(224, 224)):
     img = Image.open(image_path)
     img = img.resize(target_size)
@@ -31,7 +32,7 @@ def load_and_preprocess_image(image_path, target_size=(224, 224)):
     img_array = img_array.astype('float32') / 255.
     return img_array
 
-# ==== Step 5: Helper - Predict class ====
+# === Predict ===
 def predict_image_class(model, image_path, class_indices):
     preprocessed_img = load_and_preprocess_image(image_path)
     predictions = model.predict(preprocessed_img)
@@ -39,20 +40,19 @@ def predict_image_class(model, image_path, class_indices):
     predicted_class_name = class_indices[str(predicted_class_index)]
     return predicted_class_name
 
-# ==== Step 6: Streamlit UI ====
-st.title('🌿 Plant Disease Classifier')
+# === Streamlit app ===
+st.title('🍃 Plant Disease Classifier')
 
-uploaded_image = st.file_uploader("📷 Upload an image of a plant leaf...", type=["jpg", "jpeg", "png"])
+uploaded_image = st.file_uploader("📷 Upload a plant leaf image...", type=["jpg", "jpeg", "png"])
 
-if uploaded_image is not None:
+if uploaded_image:
     image = Image.open(uploaded_image)
     col1, col2 = st.columns(2)
 
     with col1:
-        resized_img = image.resize((150, 150))
-        st.image(resized_img, caption="Uploaded Image")
+        st.image(image.resize((150, 150)), caption="Uploaded Image")
 
     with col2:
-        if st.button('🔍 Classify'):
+        if st.button("🔍 Classify"):
             prediction = predict_image_class(model, uploaded_image, class_indices)
-            st.success(f'✅ Prediction: **{str(prediction)}**')
+            st.success(f'✅ Prediction: **{prediction}**')
