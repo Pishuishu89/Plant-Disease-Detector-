@@ -6,24 +6,24 @@ import tensorflow as tf
 import streamlit as st
 import gdown
 
-# === Model file ID from Google Drive ===
+# === Direct download link to your model on Google Drive ===
 file_id = "1eHlFtHhK1oRtYZ_SUIJMosLZCGRQYiur"
 url = f"https://drive.google.com/uc?id={file_id}"
 model_path = "plant_disease_prediction_model.h5"
 
-# === Download the model if it doesn't exist ===
+# Download model if it doesn't exist
 if not os.path.exists(model_path):
     st.write("📥 Downloading model from Google Drive...")
     gdown.download(url, model_path, quiet=False)
 
-# === Load the model ===
+# Load model
 model = tf.keras.models.load_model(model_path)
 
-# === Load class labels ===
+# Load class labels (MUST BE IN YOUR REPO)
 with open("class_indices.json") as f:
     class_indices = json.load(f)
 
-# === Preprocess uploaded image ===
+# Image preprocessing
 def load_and_preprocess_image(image_path, target_size=(224, 224)):
     img = Image.open(image_path)
     img = img.resize(target_size)
@@ -32,7 +32,7 @@ def load_and_preprocess_image(image_path, target_size=(224, 224)):
     img_array = img_array.astype('float32') / 255.
     return img_array
 
-# === Predict ===
+# Prediction
 def predict_image_class(model, image_path, class_indices):
     preprocessed_img = load_and_preprocess_image(image_path)
     predictions = model.predict(preprocessed_img)
@@ -40,7 +40,7 @@ def predict_image_class(model, image_path, class_indices):
     predicted_class_name = class_indices[str(predicted_class_index)]
     return predicted_class_name
 
-# === Streamlit app ===
+# Streamlit App
 st.title('🍃 Plant Disease Classifier')
 
 uploaded_image = st.file_uploader("📷 Upload a plant leaf image...", type=["jpg", "jpeg", "png"])
